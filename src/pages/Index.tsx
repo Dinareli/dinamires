@@ -146,7 +146,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="border-t bg-card/50 backdrop-blur-sm py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>© 2024 Dinamires. Todos os direitos reservados.</p>
+          <p>© 2025 Dinamires. Todos os direitos reservados.</p>
           <div className="flex items-center justify-center gap-6 mt-4">
             <a href="#" className="hover:text-primary transition-colors">
               Termos de Uso
