@@ -2,53 +2,39 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Heart, Users, TrendingUp, Shield, Zap, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
 const Index = () => {
   const navigate = useNavigate();
-
-  const features = [
-    {
-      icon: Users,
-      title: "Comunidade Engajada",
-      description: "Conecte-se com seus apoiadores e crie uma comunidade forte",
-    },
-    {
-      icon: TrendingUp,
-      title: "Crescimento Sustentável",
-      description: "Receba apoio recorrente e previsível para seus projetos",
-    },
-    {
-      icon: Shield,
-      title: "Pagamentos Seguros",
-      description: "Sistema de pagamento confiável com Pix, cartão e boleto",
-    },
-    {
-      icon: Zap,
-      title: "Fácil de Usar",
-      description: "Crie e gerencie suas campanhas em minutos",
-    },
-  ];
-
-  const testimonials = [
-    {
-      name: "Maria Silva",
-      role: "Criadora de Conteúdo",
-      content: "O Dinamires mudou completamente minha forma de trabalhar. Agora posso focar no que amo fazer!",
-    },
-    {
-      name: "João Santos",
-      role: "Podcaster",
-      content: "A plataforma é intuitiva e meus apoiadores adoram os benefícios exclusivos.",
-    },
-    {
-      name: "Ana Costa",
-      role: "Artista Digital",
-      content: "Finalmente consegui monetizar minha arte de forma sustentável. Recomendo!",
-    },
-  ];
-
-  return (
-    <div className="min-h-screen bg-background">
+  const features = [{
+    icon: Users,
+    title: "Comunidade Engajada",
+    description: "Conecte-se com seus apoiadores e crie uma comunidade forte"
+  }, {
+    icon: TrendingUp,
+    title: "Crescimento Sustentável",
+    description: "Receba apoio recorrente e previsível para seus projetos"
+  }, {
+    icon: Shield,
+    title: "Pagamentos Seguros",
+    description: "Sistema de pagamento confiável com Pix, cartão e boleto"
+  }, {
+    icon: Zap,
+    title: "Fácil de Usar",
+    description: "Crie e gerencie suas campanhas em minutos"
+  }];
+  const testimonials = [{
+    name: "Maria Silva",
+    role: "Criadora de Conteúdo",
+    content: "O Dinamires mudou completamente minha forma de trabalhar. Agora posso focar no que amo fazer!"
+  }, {
+    name: "João Santos",
+    role: "Podcaster",
+    content: "A plataforma é intuitiva e meus apoiadores adoram os benefícios exclusivos."
+  }, {
+    name: "Ana Costa",
+    role: "Artista Digital",
+    content: "Finalmente consegui monetizar minha arte de forma sustentável. Recomendo!"
+  }];
+  return <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 gradient-hero opacity-10" />
@@ -57,7 +43,7 @@ const Index = () => {
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-hero rounded-3xl mb-6 glow-primary animate-scale-in">
               <Heart className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-4xl md:text-6xl font-heading font-bold mb-6 bg-gradient-hero bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-6xl font-heading font-bold mb-6 bg-gradient-hero bg-clip-text text-zinc-700">
               Apoie Criadores.<br />Receba Conteúdo Exclusivo.
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl">
@@ -65,19 +51,10 @@ const Index = () => {
               Crie sua campanha e comece a receber apoio recorrente hoje mesmo.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 animate-slide-up">
-              <Button 
-                size="lg" 
-                className="text-lg px-8 glow-primary"
-                onClick={() => navigate("/auth")}
-              >
+              <Button size="lg" className="text-lg px-8 glow-primary" onClick={() => navigate("/auth")}>
                 Começar Agora
               </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="text-lg px-8"
-                onClick={() => navigate("/dashboard")}
-              >
+              <Button size="lg" variant="outline" className="text-lg px-8" onClick={() => navigate("/dashboard")}>
                 Explorar Campanhas
               </Button>
             </div>
@@ -97,12 +74,9 @@ const Index = () => {
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, index) => (
-              <Card 
-                key={index} 
-                className="glass-card hover-scale animate-fade-in"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
+            {features.map((feature, index) => <Card key={index} className="glass-card hover-scale animate-fade-in" style={{
+            animationDelay: `${index * 100}ms`
+          }}>
                 <CardHeader>
                   <div className="w-12 h-12 bg-gradient-hero rounded-xl flex items-center justify-center mb-4">
                     <feature.icon className="w-6 h-6 text-white" />
@@ -110,8 +84,7 @@ const Index = () => {
                   <CardTitle className="text-xl">{feature.title}</CardTitle>
                   <CardDescription>{feature.description}</CardDescription>
                 </CardHeader>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -128,17 +101,12 @@ const Index = () => {
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.map((testimonial, index) => (
-              <Card 
-                key={index} 
-                className="glass-card animate-fade-in"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
+            {testimonials.map((testimonial, index) => <Card key={index} className="glass-card animate-fade-in" style={{
+            animationDelay: `${index * 100}ms`
+          }}>
                 <CardHeader>
                   <div className="flex items-center gap-1 mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-primary text-primary" />
-                    ))}
+                    {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-primary text-primary" />)}
                   </div>
                   <CardDescription className="text-base">
                     "{testimonial.content}"
@@ -148,8 +116,7 @@ const Index = () => {
                   <p className="font-semibold">{testimonial.name}</p>
                   <p className="text-sm text-muted-foreground">{testimonial.role}</p>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -168,11 +135,7 @@ const Index = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button 
-                size="lg" 
-                className="text-lg px-12 glow-primary"
-                onClick={() => navigate("/auth")}
-              >
+              <Button size="lg" className="text-lg px-12 glow-primary" onClick={() => navigate("/auth")}>
                 Criar Minha Campanha
               </Button>
             </CardContent>
@@ -197,8 +160,6 @@ const Index = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
