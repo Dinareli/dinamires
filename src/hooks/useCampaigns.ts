@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -12,17 +12,29 @@ export interface Campaign {
   status: string;
   created_at: string;
   updated_at: string;
+  profiles?: {
+    full_name: string | null;
+    avatar_url: string | null;
+  };
 }
 
 export const useCampaigns = (userId?: string) => {
-  const queryClient = useQueryClient();
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const { data: campaigns, isLoading } = useQuery({
-    queryKey: ["campaigns", userId],
-    queryFn: async () => {
+  const fetchCampaigns = async () => {
+    try {
+      setLoading(true);
       let query = supabase
         .from("campaigns")
-        .select("*")
+        .select(`
+          *,
+          profiles:owner_id (
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq("status", "active")
         .order("created_at", { ascending: false });
 
       if (userId) {
@@ -32,75 +44,97 @@ export const useCampaigns = (userId?: string) => {
       const { data, error } = await query;
 
       if (error) throw error;
-      return data as Campaign[];
-    },
-    enabled: !!userId || userId === undefined,
-  });
+      setCampaigns(data || []);
+    } catch (error) {
+      console.error("Error fetching campaigns:", error);
+      toast.error("Erro ao carregar campanhas");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const createCampaign = useMutation({
-    mutationFn: async (newCampaign: Omit<Campaign, "id" | "created_at" | "updated_at" | "status">) => {
+  useEffect(() => {
+    fetchCampaigns();
+  }, [userId]);
+
+  const createCampaign = async (campaignData: {
+    title: string;
+    description: string;
+    category: string;
+    image_url?: string;
+  }) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
       const { data, error } = await supabase
         .from("campaigns")
-        .insert([newCampaign])
+        .insert([
+          {
+            ...campaignData,
+            owner_id: user.id,
+          },
+        ])
         .select()
         .single();
 
       if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
-      toast.success("Campanha criada com sucesso!");
-    },
-    onError: (error: Error) => {
-      toast.error(`Erro ao criar campanha: ${error.message}`);
-    },
-  });
 
-  const updateCampaign = useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<Campaign> & { id: string }) => {
-      const { data, error } = await supabase
+      toast.success("Campanha criada com sucesso!");
+      fetchCampaigns();
+      return data;
+    } catch (error) {
+      console.error("Error creating campaign:", error);
+      toast.error("Erro ao criar campanha");
+      throw error;
+    }
+  };
+
+  const updateCampaign = async (
+    campaignId: string,
+    updates: Partial<Campaign>
+  ) => {
+    try {
+      const { error } = await supabase
         .from("campaigns")
         .update(updates)
-        .eq("id", id)
-        .select()
-        .single();
+        .eq("id", campaignId);
 
       if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
-      toast.success("Campanha atualizada com sucesso!");
-    },
-    onError: (error: Error) => {
-      toast.error(`Erro ao atualizar campanha: ${error.message}`);
-    },
-  });
 
-  const deleteCampaign = useMutation({
-    mutationFn: async (id: string) => {
+      toast.success("Campanha atualizada!");
+      fetchCampaigns();
+    } catch (error) {
+      console.error("Error updating campaign:", error);
+      toast.error("Erro ao atualizar campanha");
+      throw error;
+    }
+  };
+
+  const deleteCampaign = async (campaignId: string) => {
+    try {
       const { error } = await supabase
         .from("campaigns")
         .delete()
-        .eq("id", id);
+        .eq("id", campaignId);
 
       if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
-      toast.success("Campanha excluída com sucesso!");
-    },
-    onError: (error: Error) => {
-      toast.error(`Erro ao excluir campanha: ${error.message}`);
-    },
-  });
+
+      toast.success("Campanha excluída!");
+      fetchCampaigns();
+    } catch (error) {
+      console.error("Error deleting campaign:", error);
+      toast.error("Erro ao excluir campanha");
+      throw error;
+    }
+  };
 
   return {
-    campaigns: campaigns || [],
-    isLoading,
+    campaigns,
+    loading,
     createCampaign,
     updateCampaign,
     deleteCampaign,
+    refetch: fetchCampaigns,
   };
 };

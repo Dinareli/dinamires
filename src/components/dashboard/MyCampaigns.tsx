@@ -7,83 +7,82 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Edit, Settings, Trash2, FileText, Plus } from "lucide-react";
-import { useCampaigns, Campaign } from "@/hooks/useCampaigns";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { MoreVertical, Edit, Trash2, FileText, Loader2 } from "lucide-react";
+import { useCampaigns } from "@/hooks/useCampaigns";
 import CreateCampaignDialog from "./CreateCampaignDialog";
 import EditCampaignDialog from "./EditCampaignDialog";
-import DeleteCampaignDialog from "./DeleteCampaignDialog";
-import { Skeleton } from "@/components/ui/skeleton";
+import CreatePostDialog from "./CreatePostDialog";
+import { Campaign } from "@/hooks/useCampaigns";
 
 interface MyCampaignsProps {
   userId: string;
 }
 
 const MyCampaigns = ({ userId }: MyCampaignsProps) => {
-  const { campaigns, isLoading } = useCampaigns(userId);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const { campaigns, loading, createCampaign, updateCampaign, deleteCampaign } = useCampaigns(userId);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [postDialogOpen, setPostDialogOpen] = useState(false);
+  const [campaignToDelete, setCampaignToDelete] = useState<string | null>(null);
 
-  const handleEdit = (campaign: Campaign) => {
+  const handleDeleteClick = (campaignId: string) => {
+    setCampaignToDelete(campaignId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (campaignToDelete) {
+      await deleteCampaign(campaignToDelete);
+      setDeleteDialogOpen(false);
+      setCampaignToDelete(null);
+    }
+  };
+
+  const handleEditClick = (campaign: Campaign) => {
     setSelectedCampaign(campaign);
     setEditDialogOpen(true);
   };
 
-  const handleDelete = (campaign: Campaign) => {
+  const handleCreatePostClick = (campaign: Campaign) => {
     setSelectedCampaign(campaign);
-    setDeleteDialogOpen(true);
+    setPostDialogOpen(true);
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {[1, 2, 3].map((i) => (
-          <Card key={i} className="glass-card">
-            <CardHeader>
-              <Skeleton className="h-6 w-3/4 mb-2" />
-              <Skeleton className="h-4 w-full" />
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (campaigns.length === 0) {
     return (
-      <>
-        <Card className="glass-card">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-muted-foreground mb-4">Você ainda não criou nenhuma campanha</p>
-            <Button onClick={() => setCreateDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Criar primeira campanha
-            </Button>
-          </CardContent>
-        </Card>
-        <CreateCampaignDialog
-          open={createDialogOpen}
-          onOpenChange={setCreateDialogOpen}
-          userId={userId}
-        />
-      </>
+      <Card className="glass-card">
+        <CardContent className="flex flex-col items-center justify-center py-12">
+          <p className="text-muted-foreground mb-4">Você ainda não criou nenhuma campanha</p>
+          <CreateCampaignDialog onCreateCampaign={createCampaign} />
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <>
-      <div className="flex justify-end mb-6">
-        <Button onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nova Campanha
-        </Button>
+      <div className="mb-6 flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Minhas Campanhas</h2>
+        <CreateCampaignDialog onCreateCampaign={createCampaign} />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -98,13 +97,8 @@ const MyCampaigns = ({ userId }: MyCampaignsProps) => {
                 <div className="flex-1">
                   <CardTitle className="text-xl mb-2">{campaign.title}</CardTitle>
                   <CardDescription className="line-clamp-2">
-                    {campaign.description || "Sem descrição"}
+                    {campaign.description}
                   </CardDescription>
-                  {campaign.category && (
-                    <span className="inline-block mt-2 text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
-                      {campaign.category}
-                    </span>
-                  )}
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -113,22 +107,15 @@ const MyCampaigns = ({ userId }: MyCampaignsProps) => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleCreatePostClick(campaign)}>
                       <FileText className="mr-2 h-4 w-4" />
                       Criar novo post
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleEdit(campaign)}>
+                    <DropdownMenuItem onClick={() => handleEditClick(campaign)}>
                       <Edit className="mr-2 h-4 w-4" />
                       Editar campanha
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Settings className="mr-2 h-4 w-4" />
-                      Gerenciar campanha
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      className="text-destructive"
-                      onClick={() => handleDelete(campaign)}
-                    >
+                    <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteClick(campaign.id)}>
                       <Trash2 className="mr-2 h-4 w-4" />
                       Excluir campanha
                     </DropdownMenuItem>
@@ -137,38 +124,57 @@ const MyCampaigns = ({ userId }: MyCampaignsProps) => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Apoiadores</p>
-                  <p className="text-2xl font-bold">0</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Receita/mês</p>
-                  <p className="text-2xl font-bold">R$ 0</p>
-                </div>
+              <div className="space-y-2">
+                {campaign.category && (
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">Categoria: </span>
+                    <span className="capitalize">{campaign.category}</span>
+                  </div>
+                )}
+                {campaign.image_url && (
+                  <img 
+                    src={campaign.image_url} 
+                    alt={campaign.title}
+                    className="w-full h-32 object-cover rounded-md"
+                  />
+                )}
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <CreateCampaignDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        userId={userId}
-      />
-
       <EditCampaignDialog
+        campaign={selectedCampaign}
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
-        campaign={selectedCampaign}
+        onUpdateCampaign={updateCampaign}
       />
 
-      <DeleteCampaignDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        campaign={selectedCampaign}
-      />
+      {selectedCampaign && (
+        <CreatePostDialog
+          campaignId={selectedCampaign.id}
+          open={postDialogOpen}
+          onOpenChange={setPostDialogOpen}
+        />
+      )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. A campanha e todos os posts relacionados serão excluídos permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
