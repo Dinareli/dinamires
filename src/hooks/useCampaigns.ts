@@ -8,7 +8,7 @@ export interface Campaign {
   title: string;
   description: string | null;
   image_url: string | null;
-  category: string | null;
+  category: string[] | null;
   status: string;
   created_at: string;
   updated_at: string;
@@ -60,7 +60,7 @@ export const useCampaigns = (userId?: string) => {
   const createCampaign = async (campaignData: {
     title: string;
     description: string;
-    category: string;
+    category: string[];
     image_url?: string;
   }) => {
     try {

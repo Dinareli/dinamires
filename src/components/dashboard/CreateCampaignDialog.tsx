@@ -4,37 +4,149 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Upload, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface CreateCampaignDialogProps {
   onCreateCampaign: (data: {
     title: string;
     description: string;
-    category: string;
+    category: string[];
     image_url?: string;
   }) => Promise<any>;
 }
 
+const CATEGORIES = [
+  { id: "podcast", label: "Podcast" },
+  { id: "video", label: "Vídeo" },
+  { id: "musica", label: "Música" },
+  { id: "arte", label: "Arte" },
+  { id: "fotografia", label: "Fotografia" },
+  { id: "design", label: "Design" },
+  { id: "tecnologia", label: "Tecnologia" },
+  { id: "educacao", label: "Educação" },
+  { id: "games", label: "Games" },
+  { id: "culinaria", label: "Culinária" },
+  { id: "esportes", label: "Esportes" },
+  { id: "moda", label: "Moda" },
+  { id: "saude", label: "Saúde e Bem-estar" },
+  { id: "viagem", label: "Viagem" },
+  { id: "literatura", label: "Literatura" },
+  { id: "cinema", label: "Cinema" },
+  { id: "teatro", label: "Teatro" },
+  { id: "danca", label: "Dança" },
+  { id: "artesanato", label: "Artesanato" },
+  { id: "empreendedorismo", label: "Empreendedorismo" },
+  { id: "ciencia", label: "Ciência" },
+  { id: "meio-ambiente", label: "Meio Ambiente" },
+  { id: "outro", label: "Outro" },
+];
+
 const CreateCampaignDialog = ({ onCreateCampaign }: CreateCampaignDialogProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    category: "",
+    categories: [] as string[],
     image_url: "",
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("A imagem deve ter no máximo 5MB");
+        return;
+      }
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview("");
+    setFormData({ ...formData, image_url: "" });
+  };
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!imageFile) return formData.image_url || null;
+
+    setUploading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('campaign-images')
+        .upload(fileName, imageFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('campaign-images')
+        .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (error) {
+      console.error("Erro ao fazer upload:", error);
+      toast.error("Erro ao fazer upload da imagem");
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const toggleCategory = (categoryId: string) => {
+    setFormData((prev) => {
+      const newCategories = prev.categories.includes(categoryId)
+        ? prev.categories.filter((id) => id !== categoryId)
+        : prev.categories.length < 3
+        ? [...prev.categories, categoryId]
+        : prev.categories;
+      return { ...prev, categories: newCategories };
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (formData.categories.length === 0) {
+      toast.error("Selecione pelo menos uma categoria");
+      return;
+    }
+
     setLoading(true);
     try {
-      await onCreateCampaign(formData);
+      const imageUrl = await uploadImage();
+      
+      await onCreateCampaign({
+        title: formData.title,
+        description: formData.description,
+        category: formData.categories,
+        image_url: imageUrl || undefined,
+      });
+      
       setOpen(false);
-      setFormData({ title: "", description: "", category: "", image_url: "" });
+      setFormData({ title: "", description: "", categories: [], image_url: "" });
+      setImageFile(null);
+      setImagePreview("");
     } catch (error) {
       console.error(error);
+      toast.error("Erro ao criar campanha");
     } finally {
       setLoading(false);
     }
@@ -48,7 +160,7 @@ const CreateCampaignDialog = ({ onCreateCampaign }: CreateCampaignDialogProps) =
           Nova Campanha
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Criar Nova Campanha</DialogTitle>
           <DialogDescription>
@@ -66,6 +178,7 @@ const CreateCampaignDialog = ({ onCreateCampaign }: CreateCampaignDialogProps) =
               placeholder="Ex: Meu Podcast Semanal"
             />
           </div>
+          
           <div className="space-y-2">
             <Label htmlFor="description">Descrição *</Label>
             <Textarea
@@ -77,43 +190,94 @@ const CreateCampaignDialog = ({ onCreateCampaign }: CreateCampaignDialogProps) =
               rows={4}
             />
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="category">Categoria *</Label>
-            <Select
-              value={formData.category}
-              onValueChange={(value) => setFormData({ ...formData, category: value })}
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="podcast">Podcast</SelectItem>
-                <SelectItem value="video">Vídeo</SelectItem>
-                <SelectItem value="arte">Arte</SelectItem>
-                <SelectItem value="musica">Música</SelectItem>
-                <SelectItem value="tecnologia">Tecnologia</SelectItem>
-                <SelectItem value="educacao">Educação</SelectItem>
-                <SelectItem value="outro">Outro</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>Categorias * (selecione de 1 a 3)</Label>
+            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-md p-3">
+              {CATEGORIES.map((category) => (
+                <div key={category.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={category.id}
+                    checked={formData.categories.includes(category.id)}
+                    onCheckedChange={() => toggleCategory(category.id)}
+                    disabled={
+                      formData.categories.length >= 3 &&
+                      !formData.categories.includes(category.id)
+                    }
+                  />
+                  <label
+                    htmlFor={category.id}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    {category.label}
+                  </label>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {formData.categories.length}/3 categorias selecionadas
+            </p>
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="image_url">URL da Imagem (opcional)</Label>
-            <Input
-              id="image_url"
-              type="url"
-              value={formData.image_url}
-              onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-              placeholder="https://exemplo.com/imagem.jpg"
-            />
+            <Label>Imagem da Campanha</Label>
+            {imagePreview ? (
+              <div className="relative">
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-full h-48 object-cover rounded-lg"
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute top-2 right-2"
+                  onClick={removeImage}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <Label
+                    htmlFor="image-upload"
+                    className="flex items-center gap-2 cursor-pointer border rounded-md px-4 py-2 hover:bg-accent"
+                  >
+                    <Upload className="h-4 w-4" />
+                    Fazer Upload
+                  </Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-px bg-border" />
+                  <span className="text-xs text-muted-foreground">ou</span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
+                <Input
+                  id="image_url"
+                  type="url"
+                  value={formData.image_url}
+                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                  placeholder="Cole a URL da imagem"
+                />
+              </div>
+            )}
           </div>
+
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Criando..." : "Criar Campanha"}
+            <Button type="submit" disabled={loading || uploading}>
+              {loading || uploading ? "Criando..." : "Criar Campanha"}
             </Button>
           </div>
         </form>

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Campaign } from "@/hooks/useCampaigns";
 
 interface EditCampaignDialogProps {
@@ -14,12 +14,38 @@ interface EditCampaignDialogProps {
   onUpdateCampaign: (campaignId: string, updates: Partial<Campaign>) => Promise<void>;
 }
 
+const CATEGORIES = [
+  { id: "podcast", label: "Podcast" },
+  { id: "video", label: "Vídeo" },
+  { id: "musica", label: "Música" },
+  { id: "arte", label: "Arte" },
+  { id: "fotografia", label: "Fotografia" },
+  { id: "design", label: "Design" },
+  { id: "tecnologia", label: "Tecnologia" },
+  { id: "educacao", label: "Educação" },
+  { id: "games", label: "Games" },
+  { id: "culinaria", label: "Culinária" },
+  { id: "esportes", label: "Esportes" },
+  { id: "moda", label: "Moda" },
+  { id: "saude", label: "Saúde e Bem-estar" },
+  { id: "viagem", label: "Viagem" },
+  { id: "literatura", label: "Literatura" },
+  { id: "cinema", label: "Cinema" },
+  { id: "teatro", label: "Teatro" },
+  { id: "danca", label: "Dança" },
+  { id: "artesanato", label: "Artesanato" },
+  { id: "empreendedorismo", label: "Empreendedorismo" },
+  { id: "ciencia", label: "Ciência" },
+  { id: "meio-ambiente", label: "Meio Ambiente" },
+  { id: "outro", label: "Outro" },
+];
+
 const EditCampaignDialog = ({ campaign, open, onOpenChange, onUpdateCampaign }: EditCampaignDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    category: "",
+    categories: [] as string[],
     image_url: "",
   });
 
@@ -28,11 +54,22 @@ const EditCampaignDialog = ({ campaign, open, onOpenChange, onUpdateCampaign }: 
       setFormData({
         title: campaign.title,
         description: campaign.description || "",
-        category: campaign.category || "",
+        categories: campaign.category || [],
         image_url: campaign.image_url || "",
       });
     }
   }, [campaign]);
+
+  const toggleCategory = (categoryId: string) => {
+    setFormData((prev) => {
+      const newCategories = prev.categories.includes(categoryId)
+        ? prev.categories.filter((id) => id !== categoryId)
+        : prev.categories.length < 3
+        ? [...prev.categories, categoryId]
+        : prev.categories;
+      return { ...prev, categories: newCategories };
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +77,12 @@ const EditCampaignDialog = ({ campaign, open, onOpenChange, onUpdateCampaign }: 
     
     setLoading(true);
     try {
-      await onUpdateCampaign(campaign.id, formData);
+      await onUpdateCampaign(campaign.id, {
+        title: formData.title,
+        description: formData.description,
+        category: formData.categories,
+        image_url: formData.image_url,
+      });
       onOpenChange(false);
     } catch (error) {
       console.error(error);
@@ -51,7 +93,7 @@ const EditCampaignDialog = ({ campaign, open, onOpenChange, onUpdateCampaign }: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editar Campanha</DialogTitle>
           <DialogDescription>
@@ -79,24 +121,31 @@ const EditCampaignDialog = ({ campaign, open, onOpenChange, onUpdateCampaign }: 
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="edit-category">Categoria *</Label>
-            <Select
-              value={formData.category}
-              onValueChange={(value) => setFormData({ ...formData, category: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="podcast">Podcast</SelectItem>
-                <SelectItem value="video">Vídeo</SelectItem>
-                <SelectItem value="arte">Arte</SelectItem>
-                <SelectItem value="musica">Música</SelectItem>
-                <SelectItem value="tecnologia">Tecnologia</SelectItem>
-                <SelectItem value="educacao">Educação</SelectItem>
-                <SelectItem value="outro">Outro</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>Categorias * (selecione de 1 a 3)</Label>
+            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-md p-3">
+              {CATEGORIES.map((category) => (
+                <div key={category.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`edit-${category.id}`}
+                    checked={formData.categories.includes(category.id)}
+                    onCheckedChange={() => toggleCategory(category.id)}
+                    disabled={
+                      formData.categories.length >= 3 &&
+                      !formData.categories.includes(category.id)
+                    }
+                  />
+                  <label
+                    htmlFor={`edit-${category.id}`}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    {category.label}
+                  </label>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {formData.categories.length}/3 categorias selecionadas
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="edit-image_url">URL da Imagem</Label>

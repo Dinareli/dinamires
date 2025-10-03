@@ -86,7 +86,7 @@ const Dashboard = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                 <Avatar>
-                  <AvatarImage src={user?.user_metadata?.avatar_url} />
+                  <AvatarImage src={user?.user_metadata?.avatar_url} alt="Avatar do usuário" />
                   <AvatarFallback className="bg-gradient-hero text-white">
                     {userInitials}
                   </AvatarFallback>
