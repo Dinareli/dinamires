@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,11 +19,14 @@ interface DeleteCampaignDialogProps {
 
 const DeleteCampaignDialog = ({ open, onOpenChange, campaign }: DeleteCampaignDialogProps) => {
   const { deleteCampaign } = useCampaigns();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
     if (!campaign) return;
     
-    await deleteCampaign.mutateAsync(campaign.id);
+    setIsDeleting(true);
+    await deleteCampaign(campaign.id);
+    setIsDeleting(false);
     onOpenChange(false);
   };
 
@@ -41,8 +45,9 @@ const DeleteCampaignDialog = ({ open, onOpenChange, campaign }: DeleteCampaignDi
           <AlertDialogAction
             onClick={handleDelete}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            disabled={isDeleting}
           >
-            {deleteCampaign.isPending ? "Excluindo..." : "Excluir"}
+            {isDeleting ? "Excluindo..." : "Excluir"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
