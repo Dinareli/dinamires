@@ -84,8 +84,8 @@ const Dashboard = () => {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                <Avatar>
+              <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-transparent">
+                <Avatar className="ring-2 ring-primary/20">
                   <AvatarImage src={user?.user_metadata?.avatar_url} alt="Avatar do usuário" />
                   <AvatarFallback className="bg-gradient-hero text-white">
                     {userInitials}
@@ -127,16 +127,6 @@ const Dashboard = () => {
           </TabsList>
 
           <TabsContent value="my-campaigns" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-heading font-bold">Minhas Campanhas</h2>
-                <p className="text-muted-foreground">Gerencie suas campanhas de apoio</p>
-              </div>
-              <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                Nova Campanha
-              </Button>
-            </div>
             <MyCampaigns userId={user?.id || ""} />
           </TabsContent>
 

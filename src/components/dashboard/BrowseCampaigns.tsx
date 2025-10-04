@@ -42,14 +42,14 @@ const BrowseCampaigns = () => {
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
               />
               {campaign.category && campaign.category.length > 0 && (
-                <div className="absolute top-3 right-3 flex flex-wrap gap-1">
+                <div className="absolute top-3 right-3 flex flex-wrap gap-1.5">
                   {campaign.category.slice(0, 2).map((cat) => (
-                    <Badge key={cat} className="bg-background/90 backdrop-blur-sm capitalize text-xs">
+                    <Badge key={cat} variant="static" className="bg-background/90 backdrop-blur-sm capitalize">
                       {cat}
                     </Badge>
                   ))}
                   {campaign.category.length > 2 && (
-                    <Badge className="bg-background/90 backdrop-blur-sm text-xs">
+                    <Badge variant="static" className="bg-background/90 backdrop-blur-sm">
                       +{campaign.category.length - 2}
                     </Badge>
                   )}

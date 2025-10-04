@@ -69,19 +69,20 @@ const MyCampaigns = ({ userId }: MyCampaignsProps) => {
 
   if (campaigns.length === 0) {
     return (
-      <Card className="glass-card">
-        <CardContent className="flex flex-col items-center justify-center py-12">
-          <p className="text-muted-foreground mb-4">Você ainda não criou nenhuma campanha</p>
-          <CreateCampaignDialog onCreateCampaign={createCampaign} />
-        </CardContent>
-      </Card>
+      <div className="flex flex-col items-center justify-center py-24">
+        <p className="text-muted-foreground mb-6">Você ainda não criou nenhuma campanha</p>
+        <CreateCampaignDialog onCreateCampaign={createCampaign} />
+      </div>
     );
   }
 
   return (
     <>
       <div className="mb-6 flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Minhas Campanhas</h2>
+        <div>
+          <h2 className="text-2xl font-heading font-bold">Minhas Campanhas</h2>
+          <p className="text-muted-foreground">Gerencie suas campanhas de apoio</p>
+        </div>
         <CreateCampaignDialog onCreateCampaign={createCampaign} />
       </div>
 
@@ -124,11 +125,14 @@ const MyCampaigns = ({ userId }: MyCampaignsProps) => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                {campaign.category && (
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Categoria: </span>
-                    <span className="capitalize">{campaign.category}</span>
+              <div className="space-y-3">
+                {campaign.category && campaign.category.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {campaign.category.map((cat) => (
+                      <span key={cat} className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground capitalize">
+                        {cat}
+                      </span>
+                    ))}
                   </div>
                 )}
                 {campaign.image_url && (
