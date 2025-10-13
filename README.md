@@ -67,16 +67,7 @@ Siga os passos abaixo para configurar e rodar o projeto em seu ambiente de desen
     pnpm install
     ```
 
-3.  **Configure as variáveis de ambiente:**
-
-    Crie um arquivo `.env.local` na raiz do projeto e adicione suas chaves do Supabase. Você pode encontrá-las no painel do seu projeto em `Settings > API`.
-
-    ```env
-    VITE_SUPABASE_URL="SUA_SUPABASE_URL"
-    VITE_SUPABASE_ANON_KEY="SUA_SUPABASE_ANON_KEY"
-    ```
-
-4.  **Execute o projeto:**
+3.  **Execute o projeto:**
     ```bash
     npm run dev
     # ou
@@ -85,7 +76,7 @@ Siga os passos abaixo para configurar e rodar o projeto em seu ambiente de desen
     pnpm dev
     ```
 
-5.  Abra http://localhost:5173 (ou a porta indicada no terminal) no seu navegador para ver a aplicação.
+4.  Abra http://localhost:5173 (ou a porta indicada no terminal) no seu navegador para ver a aplicação.
 
 ---
 
