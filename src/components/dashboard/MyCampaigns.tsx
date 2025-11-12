@@ -17,11 +17,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreVertical, Edit, Trash2, FileText, Loader2 } from "lucide-react";
+import { MoreVertical, Edit, Trash2, FileText, Loader2, DollarSign } from "lucide-react";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import CreateCampaignDialog from "./CreateCampaignDialog";
 import EditCampaignDialog from "./EditCampaignDialog";
 import CreatePostDialog from "./CreatePostDialog";
+import CampaignPlans from "./CampaignPlans";
 import { Campaign } from "@/hooks/useCampaigns";
 import { Link } from "react-router-dom";
 
@@ -35,6 +36,8 @@ const MyCampaigns = ({ userId }: MyCampaignsProps) => {
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [postDialogOpen, setPostDialogOpen] = useState(false);
+  const [plansView, setPlansView] = useState(false);
+  const [plansForCampaign, setPlansForCampaign] = useState<Campaign | null>(null);
   const [campaignToDelete, setCampaignToDelete] = useState<string | null>(null);
 
   const handleDeleteClick = (campaignId: string) => {
@@ -59,6 +62,25 @@ const MyCampaigns = ({ userId }: MyCampaignsProps) => {
     setSelectedCampaign(campaign);
     setPostDialogOpen(true);
   };
+
+  const handleManagePlansClick = (campaign: Campaign) => {
+    setPlansForCampaign(campaign);
+    setPlansView(true);
+  };
+
+  if (plansView && plansForCampaign) {
+    return (
+      <div className="space-y-6">
+        <Button variant="ghost" onClick={() => setPlansView(false)} className="gap-2">
+          ← Voltar para Campanhas
+        </Button>
+        <CampaignPlans 
+          campaignId={plansForCampaign.id} 
+          campaignTitle={plansForCampaign.title}
+        />
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -110,6 +132,10 @@ const MyCampaigns = ({ userId }: MyCampaignsProps) => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleManagePlansClick(campaign)}>
+                          <DollarSign className="mr-2 h-4 w-4" />
+                          Gerenciar planos
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleCreatePostClick(campaign)}>
                           <FileText className="mr-2 h-4 w-4" />
                           Criar novo post
