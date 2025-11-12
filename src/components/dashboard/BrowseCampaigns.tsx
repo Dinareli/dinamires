@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Heart, Loader2 } from "lucide-react";
 import { useCampaigns } from "@/hooks/useCampaigns";
+import { Link } from "react-router-dom";
 
 const BrowseCampaigns = () => {
   const { campaigns, loading } = useCampaigns();
@@ -29,11 +30,11 @@ const BrowseCampaigns = () => {
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {campaigns.map((campaign, index) => (
-        <Card 
-          key={campaign.id} 
-          className="glass-card hover-scale cursor-pointer group overflow-hidden animate-fade-in"
-          style={{ animationDelay: `${index * 100}ms` }}
-        >
+        <Link key={campaign.id} to={`/campaign/${campaign.id}`}>
+          <Card 
+            className="glass-card hover-scale cursor-pointer group overflow-hidden animate-fade-in h-full"
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
           {campaign.image_url && (
             <div className="aspect-video relative overflow-hidden">
               <img
@@ -84,7 +85,8 @@ const BrowseCampaigns = () => {
               Apoiar
             </Button>
           </CardContent>
-        </Card>
+          </Card>
+        </Link>
       ))}
     </div>
   );

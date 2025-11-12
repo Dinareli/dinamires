@@ -23,6 +23,7 @@ import CreateCampaignDialog from "./CreateCampaignDialog";
 import EditCampaignDialog from "./EditCampaignDialog";
 import CreatePostDialog from "./CreatePostDialog";
 import { Campaign } from "@/hooks/useCampaigns";
+import { Link } from "react-router-dom";
 
 interface MyCampaignsProps {
   userId: string;
@@ -88,63 +89,66 @@ const MyCampaigns = ({ userId }: MyCampaignsProps) => {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {campaigns.map((campaign, index) => (
-          <Card 
-            key={campaign.id} 
-            className="glass-card hover-scale group animate-fade-in"
-            style={{ animationDelay: `${index * 100}ms` }}
-          >
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <CardTitle className="text-xl mb-2">{campaign.title}</CardTitle>
-                  <CardDescription className="line-clamp-2">
-                    {campaign.description}
-                  </CardDescription>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleCreatePostClick(campaign)}>
-                      <FileText className="mr-2 h-4 w-4" />
-                      Criar novo post
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleEditClick(campaign)}>
-                      <Edit className="mr-2 h-4 w-4" />
-                      Editar campanha
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteClick(campaign.id)}>
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Excluir campanha
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {campaign.category && campaign.category.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {campaign.category.map((cat) => (
-                      <span key={cat} className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground capitalize">
-                        {cat}
-                      </span>
-                    ))}
+          <div key={campaign.id} className="relative">
+            <Link to={`/campaign/${campaign.id}`}>
+              <Card 
+                className="glass-card hover-scale group animate-fade-in h-full"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-xl mb-2">{campaign.title}</CardTitle>
+                      <CardDescription className="line-clamp-2">
+                        {campaign.description}
+                      </CardDescription>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 relative z-10">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleCreatePostClick(campaign)}>
+                          <FileText className="mr-2 h-4 w-4" />
+                          Criar novo post
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEditClick(campaign)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Editar campanha
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteClick(campaign.id)}>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Excluir campanha
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                )}
-                {campaign.image_url && (
-                  <img 
-                    src={campaign.image_url} 
-                    alt={campaign.title}
-                    className="w-full h-32 object-cover rounded-md"
-                  />
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {campaign.category && campaign.category.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {campaign.category.map((cat) => (
+                          <span key={cat} className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground capitalize">
+                            {cat}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {campaign.image_url && (
+                      <img 
+                        src={campaign.image_url} 
+                        alt={campaign.title}
+                        className="w-full h-32 object-cover rounded-md"
+                      />
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
         ))}
       </div>
 
