@@ -25,6 +25,8 @@ import CreatePostDialog from "./CreatePostDialog";
 import CampaignPlans from "./CampaignPlans";
 import { Campaign } from "@/hooks/useCampaigns";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface MyCampaignsProps {
   userId: string;
@@ -39,6 +41,54 @@ const MyCampaigns = ({ userId }: MyCampaignsProps) => {
   const [plansView, setPlansView] = useState(false);
   const [plansForCampaign, setPlansForCampaign] = useState<Campaign | null>(null);
   const [campaignToDelete, setCampaignToDelete] = useState<string | null>(null);
+
+  const handleCreateCampaignWithPlans = async (data: {
+    title: string;
+    description: string;
+    category: string[];
+    image_url?: string;
+    plans: Array<{
+      name: string;
+      description: string;
+      price: string;
+      benefits: string[];
+    }>;
+  }) => {
+    try {
+      // Create campaign
+      const campaign = await createCampaign({
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        image_url: data.image_url,
+      });
+
+      // Create plans for the campaign
+      if (campaign && data.plans.length > 0) {
+        const planPromises = data.plans.map((plan) =>
+          supabase
+            .from("campaign_plans")
+            .insert([
+              {
+                campaign_id: campaign.id,
+                name: plan.name,
+                description: plan.description,
+                price: parseFloat(plan.price),
+                benefits: plan.benefits.filter((b) => b.trim() !== ""),
+              },
+            ])
+        );
+
+        await Promise.all(planPromises);
+        toast.success("Campanha e planos criados com sucesso!");
+      }
+
+      return campaign;
+    } catch (error) {
+      console.error("Error creating campaign with plans:", error);
+      throw error;
+    }
+  };
 
   const handleDeleteClick = (campaignId: string) => {
     setCampaignToDelete(campaignId);
@@ -94,7 +144,7 @@ const MyCampaigns = ({ userId }: MyCampaignsProps) => {
     return (
       <div className="flex flex-col items-center justify-center py-24">
         <p className="text-muted-foreground mb-6">Você ainda não criou nenhuma campanha</p>
-        <CreateCampaignDialog onCreateCampaign={createCampaign} />
+        <CreateCampaignDialog onCreateCampaign={handleCreateCampaignWithPlans} />
       </div>
     );
   }
@@ -106,7 +156,7 @@ const MyCampaigns = ({ userId }: MyCampaignsProps) => {
           <h2 className="text-2xl font-heading font-bold">Minhas Campanhas</h2>
           <p className="text-muted-foreground">Gerencie suas campanhas de apoio</p>
         </div>
-        <CreateCampaignDialog onCreateCampaign={createCampaign} />
+        <CreateCampaignDialog onCreateCampaign={handleCreateCampaignWithPlans} />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

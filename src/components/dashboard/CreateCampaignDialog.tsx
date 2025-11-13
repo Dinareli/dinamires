@@ -5,9 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Upload, X } from "lucide-react";
+import { Plus, Upload, X, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Separator } from "@/components/ui/separator";
+
+interface PlanData {
+  name: string;
+  description: string;
+  price: string;
+  benefits: string[];
+}
 
 interface CreateCampaignDialogProps {
   onCreateCampaign: (data: {
@@ -15,6 +23,7 @@ interface CreateCampaignDialogProps {
     description: string;
     category: string[];
     image_url?: string;
+    plans: PlanData[];
   }) => Promise<any>;
 }
 
@@ -56,6 +65,9 @@ const CreateCampaignDialog = ({ onCreateCampaign }: CreateCampaignDialogProps) =
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [plans, setPlans] = useState<PlanData[]>([
+    { name: "", description: "", price: "", benefits: [""] }
+  ]);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -121,11 +133,60 @@ const CreateCampaignDialog = ({ onCreateCampaign }: CreateCampaignDialogProps) =
     });
   };
 
+  const addPlan = () => {
+    setPlans([...plans, { name: "", description: "", price: "", benefits: [""] }]);
+  };
+
+  const removePlan = (index: number) => {
+    if (plans.length > 1) {
+      setPlans(plans.filter((_, i) => i !== index));
+    }
+  };
+
+  const updatePlan = (index: number, field: keyof PlanData, value: string) => {
+    const newPlans = [...plans];
+    if (field === 'benefits') {
+      return; // Benefits are handled separately
+    }
+    newPlans[index] = { ...newPlans[index], [field]: value };
+    setPlans(newPlans);
+  };
+
+  const addBenefit = (planIndex: number) => {
+    const newPlans = [...plans];
+    newPlans[planIndex].benefits.push("");
+    setPlans(newPlans);
+  };
+
+  const removeBenefit = (planIndex: number, benefitIndex: number) => {
+    const newPlans = [...plans];
+    if (newPlans[planIndex].benefits.length > 1) {
+      newPlans[planIndex].benefits = newPlans[planIndex].benefits.filter((_, i) => i !== benefitIndex);
+      setPlans(newPlans);
+    }
+  };
+
+  const updateBenefit = (planIndex: number, benefitIndex: number, value: string) => {
+    const newPlans = [...plans];
+    newPlans[planIndex].benefits[benefitIndex] = value;
+    setPlans(newPlans);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formData.categories.length === 0) {
       toast.error("Selecione pelo menos uma categoria");
+      return;
+    }
+
+    // Validate plans
+    const validPlans = plans.filter(plan => 
+      plan.name.trim() !== "" && plan.price.trim() !== "" && parseFloat(plan.price) > 0
+    );
+
+    if (validPlans.length === 0) {
+      toast.error("Adicione pelo menos um plano válido com nome e valor");
       return;
     }
 
@@ -138,12 +199,14 @@ const CreateCampaignDialog = ({ onCreateCampaign }: CreateCampaignDialogProps) =
         description: formData.description,
         category: formData.categories,
         image_url: imageUrl || undefined,
+        plans: validPlans,
       });
       
       setOpen(false);
       setFormData({ title: "", description: "", categories: [], image_url: "" });
       setImageFile(null);
       setImagePreview("");
+      setPlans([{ name: "", description: "", price: "", benefits: [""] }]);
     } catch (error) {
       console.error(error);
       toast.error("Erro ao criar campanha");
@@ -272,7 +335,130 @@ const CreateCampaignDialog = ({ onCreateCampaign }: CreateCampaignDialogProps) =
             )}
           </div>
 
-          <div className="flex justify-end gap-2">
+          <Separator className="my-6" />
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-base font-semibold">Planos de Apoio *</Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Configure os planos que seus apoiadores podem escolher
+                </p>
+              </div>
+              <Button type="button" variant="outline" size="sm" onClick={addPlan} className="gap-2">
+                <Plus className="h-3 w-3" />
+                Adicionar Plano
+              </Button>
+            </div>
+
+            <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+              {plans.map((plan, planIndex) => (
+                <div key={planIndex} className="border rounded-lg p-4 space-y-3 bg-muted/30">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-semibold">Plano {planIndex + 1}</Label>
+                    {plans.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removePlan(planIndex)}
+                        className="h-8 gap-2 text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Remover
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label htmlFor={`plan-name-${planIndex}`} className="text-xs">
+                        Nome do Plano *
+                      </Label>
+                      <Input
+                        id={`plan-name-${planIndex}`}
+                        placeholder="Ex: Apoiador Bronze"
+                        value={plan.name}
+                        onChange={(e) => updatePlan(planIndex, 'name', e.target.value)}
+                        maxLength={100}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label htmlFor={`plan-price-${planIndex}`} className="text-xs">
+                        Valor Mensal (R$) *
+                      </Label>
+                      <Input
+                        id={`plan-price-${planIndex}`}
+                        type="number"
+                        placeholder="0.00"
+                        step="0.01"
+                        min="0"
+                        value={plan.price}
+                        onChange={(e) => updatePlan(planIndex, 'price', e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor={`plan-description-${planIndex}`} className="text-xs">
+                      Descrição
+                    </Label>
+                    <Textarea
+                      id={`plan-description-${planIndex}`}
+                      placeholder="Descreva o que este plano oferece..."
+                      value={plan.description}
+                      onChange={(e) => updatePlan(planIndex, 'description', e.target.value)}
+                      rows={2}
+                      maxLength={500}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">Benefícios</Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => addBenefit(planIndex)}
+                        className="h-7 gap-1 text-xs"
+                      >
+                        <Plus className="h-3 w-3" />
+                        Adicionar
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      {plan.benefits.map((benefit, benefitIndex) => (
+                        <div key={benefitIndex} className="flex gap-2">
+                          <Input
+                            placeholder={`Benefício ${benefitIndex + 1}`}
+                            value={benefit}
+                            onChange={(e) => updateBenefit(planIndex, benefitIndex, e.target.value)}
+                            maxLength={200}
+                            className="text-sm"
+                          />
+                          {plan.benefits.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeBenefit(planIndex, benefitIndex)}
+                              className="h-9 w-9"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancelar
             </Button>
