@@ -23,6 +23,7 @@ import CreateCampaignDialog from "./CreateCampaignDialog";
 import EditCampaignDialog from "./EditCampaignDialog";
 import CreatePostDialog from "./CreatePostDialog";
 import CampaignPlans from "./CampaignPlans";
+import CampaignPosts from "./CampaignPosts";
 import { Campaign } from "@/hooks/useCampaigns";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,6 +41,8 @@ const MyCampaigns = ({ userId }: MyCampaignsProps) => {
   const [postDialogOpen, setPostDialogOpen] = useState(false);
   const [plansView, setPlansView] = useState(false);
   const [plansForCampaign, setPlansForCampaign] = useState<Campaign | null>(null);
+  const [postsView, setPostsView] = useState(false);
+  const [postsForCampaign, setPostsForCampaign] = useState<Campaign | null>(null);
   const [campaignToDelete, setCampaignToDelete] = useState<string | null>(null);
 
   const handleCreateCampaignWithPlans = async (data: {
@@ -118,10 +121,18 @@ const MyCampaigns = ({ userId }: MyCampaignsProps) => {
     setPlansView(true);
   };
 
+  const handleManagePostsClick = (campaign: Campaign) => {
+    setPostsForCampaign(campaign);
+    setPostsView(true);
+  };
+
   if (plansView && plansForCampaign) {
     return (
       <div className="space-y-6">
-        <Button variant="ghost" onClick={() => setPlansView(false)} className="gap-2">
+        <Button variant="ghost" onClick={() => {
+          setPlansView(false);
+          setPlansForCampaign(null);
+        }} className="gap-2">
           ← Voltar para Campanhas
         </Button>
         <CampaignPlans 
@@ -129,6 +140,18 @@ const MyCampaigns = ({ userId }: MyCampaignsProps) => {
           campaignTitle={plansForCampaign.title}
         />
       </div>
+    );
+  }
+
+  if (postsView && postsForCampaign) {
+    return (
+      <CampaignPosts
+        campaign={postsForCampaign}
+        onBack={() => {
+          setPostsView(false);
+          setPostsForCampaign(null);
+        }}
+      />
     );
   }
 
@@ -186,9 +209,9 @@ const MyCampaigns = ({ userId }: MyCampaignsProps) => {
                           <DollarSign className="mr-2 h-4 w-4" />
                           Gerenciar planos
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleCreatePostClick(campaign)}>
+                        <DropdownMenuItem onClick={() => handleManagePostsClick(campaign)}>
                           <FileText className="mr-2 h-4 w-4" />
-                          Criar novo post
+                          Gerenciar posts
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleEditClick(campaign)}>
                           <Edit className="mr-2 h-4 w-4" />
