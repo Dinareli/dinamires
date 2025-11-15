@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -123,7 +124,16 @@ const CreatePostDialog = ({ campaignId, open, onOpenChange }: CreatePostDialogPr
               </Select>
             </div>
           </div>
-          {formData.post_type !== "text" && (
+          {formData.post_type === "image" && (
+            <div className="space-y-2">
+              <Label>Imagem do Post</Label>
+              <ImageUpload
+                value={formData.media_url}
+                onChange={(url) => setFormData({ ...formData, media_url: url || "" })}
+              />
+            </div>
+          )}
+          {formData.post_type !== "text" && formData.post_type !== "image" && (
             <div className="space-y-2">
               <Label htmlFor="media-url">URL da Mídia</Label>
               <Input
@@ -131,7 +141,7 @@ const CreatePostDialog = ({ campaignId, open, onOpenChange }: CreatePostDialogPr
                 type="url"
                 value={formData.media_url}
                 onChange={(e) => setFormData({ ...formData, media_url: e.target.value })}
-                placeholder="https://exemplo.com/arquivo.jpg"
+                placeholder="https://exemplo.com/arquivo.mp4"
               />
             </div>
           )}

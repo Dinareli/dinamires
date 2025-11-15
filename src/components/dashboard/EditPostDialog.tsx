@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { CampaignPost } from "@/hooks/useCampaignPosts";
 
 interface EditPostDialogProps {
@@ -116,7 +117,16 @@ const EditPostDialog = ({ post, open, onOpenChange, onUpdate }: EditPostDialogPr
               </Select>
             </div>
           </div>
-          {formData.post_type !== "text" && (
+          {formData.post_type === "image" && (
+            <div className="space-y-2">
+              <Label>Imagem do Post</Label>
+              <ImageUpload
+                value={formData.media_url}
+                onChange={(url) => setFormData({ ...formData, media_url: url || "" })}
+              />
+            </div>
+          )}
+          {formData.post_type !== "text" && formData.post_type !== "image" && (
             <div className="space-y-2">
               <Label htmlFor="edit-media-url">URL da Mídia</Label>
               <Input
@@ -124,7 +134,7 @@ const EditPostDialog = ({ post, open, onOpenChange, onUpdate }: EditPostDialogPr
                 type="url"
                 value={formData.media_url}
                 onChange={(e) => setFormData({ ...formData, media_url: e.target.value })}
-                placeholder="https://exemplo.com/media"
+                placeholder="https://exemplo.com/video.mp4"
               />
             </div>
           )}
